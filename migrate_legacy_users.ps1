@@ -28,6 +28,24 @@ function main_init{
 		$usr = $(($_).samaccountname)
 		write-host -foregroundcolor cyan "[$id/$mbc] $usr"
 
+		# disable
+		write-host -nonewline "`t- Disabling account for $usr... "
+		try{
+			# set-aduser -identity $usr -enabled:$false
+			write-host -foregroundcolor green "OK!"
+		}
+		catch{
+			$em = $_.exception.message
+			$ei = $_.exception.itemname
+			if($ei -ne $null){
+				$err = "$em / $ei"
+			}
+			else{
+				$err = "$em"
+			}
+			write-host -foregroundcolor red "Failed! ($err)"
+		}
+
 		# migrate
 		$pc = $(get-aduser -identity $usr -properties distinguishedname).distinguishedname
 		$sou = ("$pc").split(",")
