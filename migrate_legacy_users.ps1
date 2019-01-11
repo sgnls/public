@@ -6,6 +6,7 @@ $ldt = get-date -format "MM-dd-yyyy_hh-mm-ss"
 $log = "legacy_domains-$ldt.log"
 $domains = @("domain1.com","domain2.com")
 $tou = "OU=Ex-Users,DC=domain,DC=local"
+$mbx = "exchangeserver"
 $mbs = get-mailbox -resultsize unlimited
 $mbc = ($mbs).count
 $id = 0
@@ -21,6 +22,10 @@ if($suppress -eq "1"){
 if(!(get-module activedirectory)){
 	import-module activedirectory >$null 2>&1
 }
+
+# mbx : refine
+$emc = new-pssession -configurationname Microsoft.Exchange -connectionuri http://$mbx/PowerShell/ -authentication Kerberos
+import-pssession $emc >$null 2>&1
 
 function main_init{
 	$mbs | ? {$_.primarysmtpaddress -match "$domains"} | % {
