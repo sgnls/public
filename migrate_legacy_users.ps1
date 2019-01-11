@@ -4,7 +4,7 @@
 $logging = "1"
 $ldt = get-date -format "MM-dd-yyyy_hh-mm-ss"
 $log = "legacy_domains-$ldt.log"
-$domains = @("domain1.com","domain1.com")
+$domains = @("domain1.com","domain2.com")
 $tou = "OU=Ex-Users,DC=domain,DC=local"
 $mbs = get-mailbox -resultsize unlimited
 $mbc = ($mbs).count
