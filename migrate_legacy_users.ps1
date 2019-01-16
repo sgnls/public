@@ -3,12 +3,10 @@
 # globals
 $logging = "1"
 $ldt = get-date -format "MM-dd-yyyy_hh-mm-ss"
+$domains = @("domA","domB","domC")
 $log = "legacy_domains-$ldt.log"
-$domains = @("domain1.com","domain2.com")
 $tou = "OU=Ex-Users,DC=domain,DC=local"
-$mbx = "exchangeserver"
-$mbs = get-mailbox -resultsize unlimited
-$mbc = ($mbs).count
+$mbx = "exchange"
 $id = 0
 
 # prep
@@ -28,88 +26,94 @@ $emc = new-pssession -configurationname Microsoft.Exchange -connectionuri http:/
 import-pssession $emc >$null 2>&1
 
 function main_init{
-	$mbs | ? {$_.primarysmtpaddress -match "$domains"} | % {
-		$id++
-		$usr = $(($_).samaccountname)
-		write-host -foregroundcolor cyan "[$id/$mbc] $usr"
+	$domains | % {
+		$dom = $_
+		$mbs = get-mailbox -resultsize unlimited | ? {$_.primarysmtpaddress -match $dom}
+		$mbc = ($mbs).count
+		# "There are $mbc matches against $dom."
+		$mbs | % {
+			$id++
+			$usr = $(($_).samaccountname)
+			$smtp = $(($_).primarysmtpaddress)
+			write-host -foregroundcolor cyan "[$id/$mbc] $usr"
 
-		# disable
-		write-host -nonewline "`t- Disabling account for $usr... "
-		try{
-			# set-aduser -identity $usr -enabled:$false
-			write-host -foregroundcolor green "OK!"
-		}
-		catch{
-			$em = $_.exception.message
-			$ei = $_.exception.itemname
-			if($ei -ne $null){
-				$err = "$em / $ei"
-			}
-			else{
-				$err = "$em"
-			}
-			write-host -foregroundcolor red "Failed! ($err)"
-		}
-
-		# migrate
-		$pc = $(get-aduser -identity $usr -properties distinguishedname).distinguishedname
-		$sou = ("$pc").split(",")
-		$ou = ($sou[1..($sou.length -1)] -join ",")
-		write-host -nonewline "`t- Migrating $usr from $sou to $tou... "
-		try{
-			# move-adobject -identity $usr -targetpath "$tou"
-			write-host -foregroundcolor green "OK!"
-		}
-		catch{
-			$em = $_.exception.message
-			$ei = $_.exception.itemname
-			if($ei -ne $null){
-				$err = "$em / $ei"
-			}
-			else{
-				$err = "$em"
-			}
-			write-host -foregroundcolor red "Failed! ($err)"
-		}
-
-		# disable protocols
-		$prot = @("OWA","IMAP","MAPI","POP","ActiveSync","EWS")
-		$prot | % {
-			write-host -nonewline "`t- Disabling $_... "
-			$pr = ($_).tolower()
-			$pro = $pr + "enabled"
-			$caspara = @{
-				$pro = $false
-			}
+			# disable
+			write-host -nonewline "`t- Disabling account for $usr... "
 			try{
-				# set-casmailbox -identity $usr @caspara
+				# set-aduser -identity $usr -enabled:$false
+				write-host -foregroundcolor green "OK!"
+			}
+			catch{
+				$em = $_.exception.message
+				$ei = $_.exception.itemname
+				if($ei -ne $null){
+					$err = "$em / $ei"
+				}
+				else{
+					$err = "$em"
+				}
+				write-host -foregroundcolor red "Failed! ($err)"
+			}
+
+			# migrate
+			$pc = $(get-aduser -identity $usr -properties distinguishedname).distinguishedname
+			$sou = ("$pc").split(",")
+			$ou = ($sou[1..($sou.length -1)] -join ",")
+			write-host -nonewline "`t- Migrating $usr from $sou to $tou... "
+			try{
+				# move-adobject -identity $usr -targetpath "$tou"
+				write-host -foregroundcolor green "OK!"
+			}
+			catch{
+				$em = $_.exception.message
+				$ei = $_.exception.itemname
+				if($ei -ne $null){
+					$err = "$em / $ei"
+				}
+				else{
+					$err = "$em"
+				}
+				write-host -foregroundcolor red "Failed! ($err)"
+			}
+
+			# disable protocols
+			$prot = @("OWA","IMAP","MAPI","POP","ActiveSync","EWS")
+			$prot | % {
+				write-host -nonewline "`t- Disabling $_... "
+				$pr = ($_).tolower()
+				$pro = $pr + "enabled"
+				$caspara = @{
+					$pro = $false
+				}
+				try{
+					# set-casmailbox -identity $usr @caspara
+					write-host -foregroundcolor green "OK!"
+					$n++
+				}
+				catch{
+					write-host -foregroundcolor red "Failed!"
+				}
+			}
+
+			# hide from GAL
+			write-host -nonewline "`t- Hiding from Global Address List... "
+			try{
+				# set-mailbox -identity $usr -hiddenfromaddresslistsenabled:$true
 				write-host -foregroundcolor green "OK!"
 				$n++
 			}
 			catch{
-				write-host -foregroundcolor red "Failed!"
+				$em = $_.exception.message
+				$ei = $_.exception.itemname
+				if($ei -ne $null){
+					$err = "$em / $ei"
+				}
+				else{
+					$err = "$em"
+				}
+				write-host -foregroundcolor red "Failed! ($err)"
 			}
 		}
-
-		# hide from GAL
-		write-host -nonewline "`t- Hiding from Global Address List... "
-		try{
-			# set-mailbox -identity $usr -hiddenfromaddresslistsenabled:$true
-			write-host -foregroundcolor green "OK!"
-			$n++
-		}
-		catch{
-			$em = $_.exception.message
-			$ei = $_.exception.itemname
-			if($ei -ne $null){
-				$err = "$em / $ei"
-			}
-			else{
-				$err = "$em"
-			}
-			write-host -foregroundcolor red "Failed! ($err)"
-		}
-
 	}
 }
 
