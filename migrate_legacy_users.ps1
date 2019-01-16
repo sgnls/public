@@ -29,7 +29,7 @@ $amb = get-mailbox -resultsize unlimited
 function main_init{
 	$domains | % {
 		$dom = $_
-		$mb = $amb | ? {$_.primarysmtpaddress -match $dom}
+		$mbs = $amb | ? {$_.primarysmtpaddress -match $dom}
 		$mbc = ($mbs).count
 		# "There are $mbc matches against $dom."
 		$mbs | % {
