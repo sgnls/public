@@ -2,6 +2,7 @@
 
 # globals
 $logging = "1"
+$live = "0"
 $ldt = get-date -format "MM-dd-yyyy_hh-mm-ss"
 $domains = @("domA","domB","domC")
 $log = "legacy_domains-$ldt.log"
@@ -40,7 +41,9 @@ function main_init{
 			# disable
 			write-host -nonewline "`t- Disabling account for $usr... "
 			try{
-				# set-aduser -identity $usr -enabled:$false
+				if($live -eq "1"){
+					 set-aduser -identity $usr -enabled:$false
+				}
 				write-host -foregroundcolor green "OK!"
 			}
 			catch{
@@ -61,7 +64,9 @@ function main_init{
 			$ou = ($sou[1..($sou.length -1)] -join ",")
 			write-host -nonewline "`t- Migrating $usr from $sou to $tou... "
 			try{
-				# move-adobject -identity $usr -targetpath "$tou"
+				if($live -eq "1"){
+					move-adobject -identity $usr -targetpath "$tou"
+				}
 				write-host -foregroundcolor green "OK!"
 			}
 			catch{
@@ -86,7 +91,9 @@ function main_init{
 					$pro = $false
 				}
 				try{
-					# set-casmailbox -identity $usr @caspara
+					if($live -eq "1"){
+						set-casmailbox -identity $usr @caspara
+					}
 					write-host -foregroundcolor green "OK!"
 					$n++
 				}
@@ -98,7 +105,9 @@ function main_init{
 			# hide from GAL
 			write-host -nonewline "`t- Hiding from Global Address List... "
 			try{
-				# set-mailbox -identity $usr -hiddenfromaddresslistsenabled:$true
+				if($live -eq "1"){
+					set-mailbox -identity $usr -hiddenfromaddresslistsenabled:$true
+				}
 				write-host -foregroundcolor green "OK!"
 				$n++
 			}
