@@ -34,7 +34,6 @@ function main_init{
 		$mbs | % {
 			$id++
 			$usr = $(($_).samaccountname)
-			$smtp = $(($_).primarysmtpaddress)
 			write-host -foregroundcolor cyan "[$id/$mbc] $usr"
 
 			# disable
