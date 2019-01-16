@@ -124,6 +124,7 @@ function main_init{
 			}
 		}
 	}
+	break
 }
 
 # init
