@@ -24,11 +24,12 @@ if(!(get-module activedirectory)){
 # mbx : refine
 $emc = new-pssession -configurationname Microsoft.Exchange -connectionuri http://$mbx/PowerShell/ -authentication Kerberos
 import-pssession $emc >$null 2>&1
+$amb = get-mailbox -resultsize unlimited
 
 function main_init{
 	$domains | % {
 		$dom = $_
-		$mbs = get-mailbox -resultsize unlimited | ? {$_.primarysmtpaddress -match $dom}
+		$mb = $amb | ? {$_.primarysmtpaddress -match $dom}
 		$mbc = ($mbs).count
 		# "There are $mbc matches against $dom."
 		$mbs | % {
