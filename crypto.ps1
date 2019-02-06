@@ -502,11 +502,11 @@ function report{
 			# $ou = "ou=Computers,ou=Parent,$domain"
 		}
 		if($selection -eq "S" -or $selection -eq "s"){
-			$hostnames = get-adcomputer -searchbase "$domain" -filter {(OperatingSystem -like "*Server*") -and (enabled -eq $True)} | select Name -expandproperty Name
+			$hostnames = get-adcomputer -searchbase "$domain" -filter {(OperatingSystem -like "*Server*") -and (enabled -eq $True)} | select Name -expandproperty Name | sort
 			report_run
 		}
 		if($selection -eq "W" -or $selection -eq "w"){
-			$hostnames = get-adcomputer -searchbase "$domain" -filter {(OperatingSystem -notlike "*Server*") -and (enabled -eq $True)} | select Name -expandproperty Name
+			$hostnames = get-adcomputer -searchbase "$domain" -filter {(OperatingSystem -notlike "*Server*") -and (enabled -eq $True)} | select Name -expandproperty Name | sort
 			report_run
 		}
 		if($selection -eq "H" -or $selection -eq "h"){
